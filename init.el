@@ -61,6 +61,25 @@
   (setq-default indent-tabs-mode nil)
   (setq-default tab-width nux/indent-width))
 
+;; TODO : font actually doesn't load when place below
+(use-package frame
+  :preface
+  (defun nux/fontsize-normal ()
+    (interactive)
+    (set-face-attribute 'default nil :height 140))
+  (defun nux/set-default-font ()
+    (interactive)
+    (when (member "Consolas" (font-family-list))
+      (set-face-attribute 'default nil :family "Consolas" :weight 'normal))
+    (nux/fontsize-normal))
+  (defalias 'nux/normal-fontsize #'nux/fontsize-normal)
+  (defalias 'nux/small-fontsize #'nux/fontsize-small)
+  :ensure nil
+  :config
+  (setq default-frame-alist
+        (append (list '(width  . 75) '(height . 35)
+                      '(internal-border-width . 2))))
+  (nux/set-default-font))
 
 ;; GUI
 ;; Remove unused features
@@ -68,6 +87,7 @@
 (tool-bar-mode -1)
 (scroll-bar-mode -1)
 (display-time-mode 1)
+
 ;; Enable subwords for camel case
 (global-subword-mode 1)
 (global-hl-line-mode 0)
@@ -79,16 +99,6 @@
   (setq custom-file "~/.emacs.d/to-be-dumped.el"))
 
 (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
-
-;; Never use tabs, use spaces instead.
-(setq-default
- indent-tabs-mode nil
- tab-width 2)
-
-(setq
- tab-width 2
- js-indent-level 2
- css-indent-offset 2)
 
 ;; I don't care about auto save and backup files.
 (setq
@@ -102,19 +112,16 @@
   :ensure nil
   :config (setq inhibit-startup-screen t))
 
-;; Colorschemes
-(use-package doom-themes)
-(use-package faff-theme)
-(use-package dracula-theme)
-(use-package acme-theme)
-(use-package moe-theme)
-
 ;; Load theme
-(load-theme 'faff t)
+(use-package doom-themes
+  ;; :custom-face
+  ;; (ivy-current-match ((t (:inherit 'hl-line))))
+  :config
+  (load-theme 'doom-old-hope t))
 
 ;; Fonts
-;; Courier is nice for text writing
-(set-face-attribute 'default nil :font "Courier Prime 14")
+;; Courier is nice for text writin
+;; (set-face-attribute 'default nil :font "Consolas 14")
 
 ;; UTF-8 encoding
 (set-terminal-coding-system  'utf-8)
@@ -128,7 +135,17 @@
 ;; Editing
 (electric-pair-mode 1)
 
-;; Regular undo-redo.
+(use-package highlight-symbol
+  :hook (prog-mode . highlight-symbol-mode)
+  :config
+  (setq highlight-symbol-idle-delay 0.3))
+
+(use-package highlight-escape-sequences
+  :hook (
+         (text-mode . hes-mode)
+         (prog-mode . hes-mode)))
+
+;; Regular undo-redo
 (use-package undo-fu)
 (global-unset-key (kbd "C-z"))
 (global-set-key (kbd "C-z")   'undo-fu-only-undo)
@@ -242,7 +259,9 @@
   :bind
    (("M-x" . counsel-M-x)
    ("M-y" . counsel-yank-pop)
-   ("C-x C-f" . counsel-find-file)))
+   ("C-x C-f" . counsel-find-file)
+   ("M-p" . counsel-git))
+   )
 
 ;; Company -- autocompletion backend
 (use-package company
@@ -251,7 +270,7 @@
   ;;(text-mode . company-mode)
   (org-mode . company-mode)
   :bind
-  ;;("TAB" . company-complete)
+  ("TAB" . company-complete)
   :config
   (setq company-minimum-prefix-length 1)
   (setq company-idle-delay 0)
@@ -288,15 +307,16 @@
   (setq eldoc-idle-delay 0.4))
 
 ;; Projectile quick file jump in your dir project
-(use-package projectile
-  :config
-  (setq projectile-sort-order 'recentf)
-  (setq projectile-indexing-method 'hybrid)
-  (setq projectile-completion-system 'ivy)
-  (projectile-mode +1)
-  (define-key projectile-mode-map (kbd "C-c p") #'projectile-command-map)
-  (define-key projectile-mode-map (kbd "M-p") #'projectile-find-file)
-  (define-key projectile-mode-map (kbd "s-F") #'projectile-ripgrep))
+;; TODO : needs to read doc fore better integration with win10
+;; (use-package projectile
+;;   :config
+;;   (setq projectile-sort-order 'recentf)
+;;   (setq projectile-indexing-method 'hybrid)
+;;   (setq projectile-completion-system 'ivy)
+;;   (projectile-mode +1)
+;;   (define-key projectile-mode-map (kbd "C-c p") #'projectile-command-map)
+;;   ;;(define-key projectile-mode-map (kbd "M-p") #'projectile-find-file)
+;;   (define-key projectile-mode-map (kbd "M-p") #'projectile-ripgrep))
 
 ;; Some functions
 ;; Reload config
@@ -415,7 +435,6 @@
           "* %u %? " :prepend t)
         ("r" "RSS" entry (file+headline "~/Dropbox/elfeed.org" "Feeds")
            "** %^g\n" :prepend t)))
-
 (global-set-key (kbd "C-c c") 'org-capture)
 
 ;;Register more exports
