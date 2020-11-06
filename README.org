@@ -1,0 +1,63 @@
+* My personal Emacs config
+
+Simple configuration from a Beginner.
+Inspire by these [[https://github.com/nuxb0t/emacs-awesome][great peeps]].
+
+* Installation
+#+BEGIN_SRC bash
+  # Save your previous config if you have one.
+  mv ~/.emacs.d/ ~/.emacs.backup/
+
+  # Clone the repository into .emacs.d
+  git clone https://github.com/r0b0tx/dotmacs.git ~/.emacs.d
+
+  # Launch the best text editor ever
+  emacs
+#+END_SRC
+
+* Description
+I keep my configuration now in a single init.el, mostly.
+
+- Packages management : *use-package*
+
+- Keybindings :
+  - Testing *Emacs bindings*
+
+- Completion :
+  - Ivy
+  - Counsel
+  - Company
+
+- Search :
+  - Swiper
+  - Avy
+  - Ripgrep
+
+- Project management :
+  - Magit
+  - Projectile
+
+- Org mode :
+  - Capture
+  - Org super agenda
+
+- RSS : Elfeed
+
+* TODOS
+- [X] : install and configure LSP.
+  - Performance issues non negligible
+  - Aside for now
+*!!! Tested on emacs 26, 27 and 28*. On emacs 28 it's so damn
+     smooth. Smoother than coc vim really good performance from 26 to 28.
+- [X] : install and configure flyspell for english/french.
+- [X] : fix flycheck
+- [X] : fix elfeed
+
+* To Try
+- [X] : mu4e
+- [ ] : ivy rich
+- [ ] : postframe
+- [ ] : origami
+- [ ] : magit-forge
+- [ ] : windmove
+- [ ] : winner mode
