@@ -49,9 +49,10 @@
   (setq ring-bell-function 'ignore)
   (setq default-directory "~/")
   (setq frame-resize-pixelwise t)
-  (setq scroll-conservatively 100)
+  (setq scroll-conservatively 101)
   (setq scroll-preserve-screen-position t)
   (setq auto-window-vscroll nil)
+  (setq echo-keystrokes 0.02)
   (setq load-prefer-newer t)
   (fset 'yes-or-no-p 'y-or-n-p)
   (setenv "BROWSER" "firefox" t)
@@ -59,6 +60,7 @@
   (setq-default line-spacing 0)
   (setq-default indent-tabs-mode nil)
   (setq-default tab-width nux/indent-width))
+
 
 ;; GUI
 ;; Remove unused features
@@ -68,6 +70,7 @@
 (display-time-mode 1)
 ;; Enable subwords for camel case
 (global-subword-mode 1)
+(global-hl-line-mode 0)
 
 ;; Dump custom-set-variables to a garbage file and don't load it
 (use-package cus-edit
@@ -76,6 +79,16 @@
   (setq custom-file "~/.emacs.d/to-be-dumped.el"))
 
 (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
+
+;; Never use tabs, use spaces instead.
+(setq-default
+ indent-tabs-mode nil
+ tab-width 2)
+
+(setq
+ tab-width 2
+ js-indent-level 2
+ css-indent-offset 2)
 
 ;; I don't care about auto save and backup files.
 (setq
@@ -90,15 +103,14 @@
   :config (setq inhibit-startup-screen t))
 
 ;; Colorschemes
-(use-package doom-themes) ;; Cool bundle
-(use-package faff-theme)  ;; Relaxing theme but lacking in certain aspect
-(use-package dracula-theme) ;; Well it's Dracula
-(use-package acme-theme) ;; Acme is good and relaxing same as faff
-(use-package moe-theme) ;; Like acme more colorfull
-;;(load-theme 'tsdh-light t) ;; Best default theme available
+(use-package doom-themes)
+(use-package faff-theme)
+(use-package dracula-theme)
+(use-package acme-theme)
+(use-package moe-theme)
 
 ;; Load theme
-(load-theme 'tsdh-light t)
+(load-theme 'faff t)
 
 ;; Fonts
 ;; Courier is nice for text writing
@@ -116,7 +128,14 @@
 ;; Editing
 (electric-pair-mode 1)
 
-;; Crux :testing:
+;; Regular undo-redo.
+(use-package undo-fu)
+(global-unset-key (kbd "C-z"))
+(global-set-key (kbd "C-z")   'undo-fu-only-undo)
+(global-set-key (kbd "C-S-z") 'undo-fu-only-redo)
+(global-set-key (kbd "s-z")   'undo-fu-only-undo)
+(global-set-key (kbd "s-r")   'undo-fu-only-redo)
+
 ;; Bundle of  utilities functions
 (use-package crux
   :bind (("C-a" . crux-move-beginning-of-line)
@@ -146,6 +165,17 @@
   :init (setq show-paren-delay 0)
   :config (show-paren-mode +1))
 
+;; Windows
+(setq
+ split-height-threshold 0
+ split-width-threshold nil)
+
+(use-package ace-window
+  :ensure t
+  :config
+  (setq aw-scope 'frame) ;; was global
+  (global-set-key (kbd "C-x o") 'ace-window))
+
 ;; Expand region under the cursor semantically
 (use-package expand-region
   :bind
@@ -173,9 +203,15 @@
   ("M-g" . avy-goto-line))
 
 ;; Local buffer search, opens in a mini-buffer
+;; (use-package swiper
+;;   :after ivy
+;;   :config
+;;   (setq swiper-action-recenter t)
+;;   (setq swiper-goto-start-of-match t))
+
 (use-package swiper
-  :bind
-  ("C-s" . swiper))
+  :config
+  (global-set-key (kbd "C-s") 'swiper-isearch))
 
 ;; Line-oriented search tool
 ;; Recursively searchs your current directory
@@ -191,6 +227,11 @@
     ivy-count-format "(%d/%d) "
     enable-recursive-minibuffers t
     ivy-initial-inputs-alist nil))
+
+(use-package ivy-rich
+  :config
+  (ivy-rich-mode 1)
+  (setq ivy-rich-path-style 'abbrev))
 
 ;; Framework on top of ivy
 (use-package counsel
@@ -287,7 +328,6 @@
 (defun insta-kill-buffer ()
   (interactive)
   (kill-buffer))
-(global-set-key (kbd "s-K") 'insta-kill-buffer)
 
 ;; Org mode
 ;; Set environment
@@ -308,6 +348,8 @@
 (use-package org-bullets)
 (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
 
+(use-package org-sidebar)
+
 ;; Org agenda
 (setq org-agenda-files (quote ("~/Dropbox/org" "~/Dropbox/org/archive" "~/Dropbox/Drafts")))
 (setq calendar-week-start-day 1)
@@ -321,8 +363,10 @@
        ((daily today remove-match)
         (800 1200 1600 2000)
         "......" "----------------")))
+
 (global-set-key (kbd "C-c a") 'org-agenda)
 
+;; Org agenda enhancements
 (use-package org-super-agenda
   :config
   (setq org-super-agenda-groups '((:name "Today"
@@ -414,7 +458,19 @@
                                (setq-local emmet-expand-jsx-className? t))))
 
 ;; Markdown
-(use-package markdown-mode)
+
+(use-package markdown-mode
+  :defer t
+  :mode (("README\\.md\\'" . gfm-mode)
+         ("\\.md\\'" . markdown-mode)
+         ("\\.markdown\\'" . markdown-mode))
+  :bind (:map markdown-mode-map
+              ("s-k" . 'markdown-insert-link)
+              ("C-s-<down>" . 'markdown-narrow-to-subtree)
+              ("C-s-<up>" . 'widen)
+              ("s-O" . 'markdown-export-html-to-clipboard-full)
+              ("M-s-O" . 'markdown-export-html-to-clipboard-no-1st-line))
+  :init (setq markdown-command '("pandoc" "--no-highlight")))
 
 ;; RSS feed in Emacs
 (use-package elfeed
@@ -439,8 +495,81 @@
 ;; Diminish certains mode
 (use-package diminish)
 
+;; Testing zone
+;;; Dired enhancements
+
+(use-package dired-single
+  :preface
+  (defun nux/dired-single-init ()
+    (define-key dired-mode-map [return] #'dired-single-buffer)
+    (define-key dired-mode-map [remap dired-mouse-find-file-other-window] #'dired-single-buffer-mouse)
+    (define-key dired-mode-map [remap dired-up-directory] #'dired-single-up-directory))
+  :config
+  (if (boundp 'dired-mode-map)
+      (nux/dired-single-init)
+    (add-hook 'dired-load-hook #'nux/dired-single-init)))
+
+(use-package dired-subtree
+  :ensure t
+  :after dired
+  :config
+  (setq dired-subtree-use-backgrounds nil)
+  :bind (:map dired-mode-map ("<tab>" . dired-subtree-toggle)))
+
+;; Pdf enhancements
+(use-package pdf-tools
+  :mode (("\\.pdf\\'" . pdf-view-mode))
+  :bind ((:map pdf-view-mode-map ("C--" . pdf-view-shrink))
+         (:map pdf-view-mode-map ("C-=" . pdf-view-enlarge))
+         (:map pdf-view-mode-map ("C-0" . pdf-view-scale-reset)))
+  :config
+  (pdf-loader-install))
+
+(use-package smart-mode-line
+  :config
+  (setq sml/no-confirm-load-theme t)
+  (setq sml/modified-char "*")
+  (sml/setup))
+
+(use-package minions
+  :config
+  (setq minions-mode-line-lighter "")
+  (setq minions-mode-line-delimiters '("" . ""))
+  (minions-mode +1))
+
+;; SPELL CHECKING
+;; Spell checking requires an external command to be available. Install =aspell= on your Mac, then make it the default checker for Emacs' =ispell=. Note that personal dictionary is located at =~/.aspell.LANG.pws= by default.
+(setq ispell-program-name "aspell")
+
+;; Enable spellcheck on the fly for all text modes. This includes org, latex and LaTeX. Spellcheck current word.
+(add-hook 'text-mode-hook 'flyspell-mode)
+(global-set-key (kbd "s-\\") 'ispell-word)
+(global-set-key (kbd "C-s-\\") 'flyspell-auto-correct-word)
+
+(use-package powerthesaurus
+  :config
+  (global-set-key (kbd "C-c s-s") 'powerthesaurus-lookup-word-dwim)
+  )
+
+;; Alternative, local thesaurus
+;;(use-package synosaurus
+;;  :config
+;;  (global-set-key (kbd "C-c s s") 'synosaurus-choose-and-replace))
+
+;; Word definition search.
+(use-package define-word
+  :config
+  (global-set-key (kbd "C-c s-w") 'define-word-at-point))
+
+(use-package magit
+  :config
+  (global-set-key (kbd "C-x g") 'magit-status))
+;; Testing zone ends here
+
 ;; Custom kbd
-(define-key global-map (kbd "<f5>") 'revert-buffer)
+(define-key global-map (kbd "<f5>") 'org-sidebar-tree)
+(define-key global-map (kbd "C-c t") 'org-sidebar-tree)
+
 (define-key global-map (kbd "C-c x") 'eval-buffer)
 (define-key global-map (kbd "C-c f") 'eval-region)
 
@@ -448,14 +577,13 @@
 (global-set-key (kbd "C->") 'next-buffer)
 (global-set-key (kbd "C-<") 'previous-buffer)
 
-;; Tree bindings from C-z
-(define-prefix-command 'z-map)
-(global-set-key (kbd "C-z") 'z-map)
-(define-key z-map (kbd "e") 'elfeed)
-(define-key z-map (kbd "v") 'split-and-follow-vertically)
-(define-key z-map (kbd "h") 'split-and-follow-horizontally)
+;; ;; Tree bindings from C-z
+;; (define-prefix-command 'z-map)
+;; (global-set-key (kbd "C-z") 'z-map)
+;; (define-key z-map (kbd "e") 'elfeed)
+;; (define-key z-map (kbd "v") 'split-and-follow-vertically)
+;; (define-key z-map (kbd "h") 'split-and-follow-horizontally)
 
 (load custom-file 'noerror)
 
 (provide 'init)
-;; EOF

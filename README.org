@@ -12,4 +12,5 @@ New config targetted for writing notes, papers and a bit for web editing.
   emacs
 #+END_SRC
 * TODOS
-** TODO : classic undo/redo
+- [ ] : make spell checking work on windows.
+- [ ] : same for magit.
