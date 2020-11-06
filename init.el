@@ -22,6 +22,7 @@
                                     (setq gc-cons-threshold nux/gc-cons-threshold)))
 (require 'package)
 
+;; Sources
 ;;(add-to-list 'package-archives '("gnu" . "https://elpa.gnu.org/packages/"))
 (add-to-list 'package-archives '("melpa" . "https://melpa.org/packages/"))
 (add-to-list 'package-archives '("org" . "https://orgmode.org/elpa/"))
@@ -33,7 +34,7 @@
   (package-refresh-contents)
   (package-install 'use-package))
 
-;; Always ensure t
+;; Always ensure installed
 (eval-and-compile
   (setq use-package-always-ensure t))
 
@@ -42,7 +43,7 @@
   :preface
   (defvar nux/indent-width 2)
   :config
-  (setq user-full-name "Jeremy LP")
+  (setq user-full-name "prim0rdial")
   (setq user-mail "jeremy.pro.lp@gmail.com")
   (setq frame-title-format '("Emacs"))
   (setq ring-bell-function 'ignore)
@@ -100,6 +101,7 @@
 (load-theme 'tsdh-light t)
 
 ;; Fonts
+;; Courier is nice for text writing
 (set-face-attribute 'default nil :font "Courier Prime 14")
 
 ;; UTF-8 encoding
@@ -170,11 +172,13 @@
   ("M-s" . avy-goto-char-2)
   ("M-g" . avy-goto-line))
 
-;; Globally search with swipper -- results the minibuffer
+;; Local buffer search, opens in a mini-buffer
 (use-package swiper
   :bind
   ("C-s" . swiper))
 
+;; Line-oriented search tool
+;; Recursively searchs your current directory
 (use-package ripgrep)
 
 ;; Completion framework
@@ -187,24 +191,6 @@
     ivy-count-format "(%d/%d) "
     enable-recursive-minibuffers t
     ivy-initial-inputs-alist nil))
-
-(use-package prescient
-  :config
-  (setq prescient-filter-method '(literal regexp initialism fuzzy))
-  (prescient-persist-mode +1))
-
-(use-package ivy-prescient
-  :after (prescient ivy)
-  :config
-  (setq ivy-prescient-sort-commands
-        '(:not swiper
-               counsel-grep
-               counsel-rg
-               counsel-projectile-rg
-               ivy-switch-buffer
-               counsel-switch-buffer))
-  (setq ivy-prescient-retain-classic-highlighting t)
-  (ivy-prescient-mode +1))
 
 ;; Framework on top of ivy
 (use-package counsel
@@ -252,7 +238,6 @@
   :config (yas-global-mode 1))
 
 (use-package yasnippet-snippets)
-
 (use-package yasnippet-classic-snippets)
 
 ;; More doc
@@ -278,6 +263,7 @@
   (interactive)
   (load-file "~/.emacs.d/init.el"))
 (global-set-key (kbd "C-c r") 'my/reload-config)
+
 ;; Load config from anywhere
 (defun my/config ()
   (interactive)
@@ -289,6 +275,7 @@
   (interactive)
   (package-refresh-contents))
 
+;; Split vertically and cursor follow new window
 (defun split-and-follow-vertically ()
   (interactive)
   (split-window-right)
@@ -308,14 +295,18 @@
   :config
   (setq
    org-startup-indented t
-   ;;org-catch-invisible-edits t
+   org-catch-invisible-edits t
    org-ellipsis " ... "
-   ;;org-bullets-bullet-list '("⁖")
+   org-bullets-bullet-list '("#")
    org-directory "~/Dropbox/org"
    org-src-tab-acts-natively t
    org-src-preserve-indentation t
    org-src-fontify-natively t)
   )
+
+;;Fancy headers
+(use-package org-bullets)
+(add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
 
 ;; Org agenda
 (setq org-agenda-files (quote ("~/Dropbox/org" "~/Dropbox/org/archive" "~/Dropbox/Drafts")))
@@ -347,11 +338,6 @@
                                   :deadline future)
                            (:name "Big Outcomes"
                                   :tag "bo"))))
-
-;;Fancy headers
-(use-package org-bullets)
-(add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
-
 
 ;; Add more states to todos
 (setq org-todo-keyword-faces
@@ -444,7 +430,7 @@
   (setq rmh-elfeed-org-files (list "~/Dropbox/elfeed.org"))
   (elfeed-org))
 
-;; Highlight colors
+;; Colors highlighter
 (use-package rainbow-mode)
 
 ;; Try packages without installing themes
@@ -462,7 +448,7 @@
 (global-set-key (kbd "C->") 'next-buffer)
 (global-set-key (kbd "C-<") 'previous-buffer)
 
-;; Load / Disable theme
+;; Tree bindings from C-z
 (define-prefix-command 'z-map)
 (global-set-key (kbd "C-z") 'z-map)
 (define-key z-map (kbd "e") 'elfeed)
@@ -472,3 +458,4 @@
 (load custom-file 'noerror)
 
 (provide 'init)
+;; EOF

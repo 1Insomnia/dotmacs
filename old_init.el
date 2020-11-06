@@ -71,8 +71,8 @@
 (global-subword-mode 1)
 
 ;; Opacity
-;; (set-frame-parameter (selected-frame) 'alpha '(90 . 70))
-;; (add-to-list 'default-frame-alist '(alpha . (90 . 70)))
+(set-frame-parameter (selected-frame) 'alpha '(90 . 70))
+(add-to-list 'default-frame-alist '(alpha . (90 . 70)))
 
 ;; Dump custom-set-variables to a garbage file and don't load it
 (use-package cus-edit
@@ -217,6 +217,30 @@
     ivy-count-format "(%d/%d) "
     enable-recursive-minibuffers t
     ivy-initial-inputs-alist nil))
+;; :TESTING:
+(use-package ivy-rich
+  :config
+  (ivy-rich-mode +1)
+  (setcdr (assq t ivy-format-functions-alist) #'ivy-format-function-line))
+
+(use-package prescient
+  :config
+  (setq prescient-filter-method '(literal regexp initialism fuzzy))
+  (prescient-persist-mode +1))
+
+(use-package ivy-prescient
+  :after (prescient ivy)
+  :config
+  (setq ivy-prescient-sort-commands
+        '(:not swiper
+               counsel-grep
+               counsel-rg
+               counsel-projectile-rg
+               ivy-switch-buffer
+               counsel-switch-buffer))
+  (setq ivy-prescient-retain-classic-highlighting t)
+  (ivy-prescient-mode +1))
+
 
 ;; Framework on top of ivy
 (use-package counsel
@@ -595,6 +619,9 @@
 (global-set-key (kbd "s-g") 'magit-status)
 (global-set-key (kbd "s-b") 'ivy-switch-buffer)
 
+;; Mail config
+
+;;(setq custom-file "~/.emacs.d/custom.el")
 (load custom-file 'noerror)
 
 (provide 'init)
