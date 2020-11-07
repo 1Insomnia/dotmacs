@@ -13,4 +13,6 @@ New config targetted for writing notes, papers and a bit for web editing.
 #+END_SRC
 * TODOS
 - [ ] : make spell checking work on windows.
-- [ ] : same for magit.
+- [X] : same for magit.
+- [ ] : needs pandoc conversion for markdown.
+- [ ] : needs to fix org-babel for js. Throwing a bunch of errors for the moment.

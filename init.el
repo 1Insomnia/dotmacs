@@ -57,40 +57,13 @@
   (fset 'yes-or-no-p 'y-or-n-p)
   (setenv "BROWSER" "firefox" t)
   (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
-  (setq-default line-spacing 0)
+  (setq-default line-spacing 3)
   (setq-default indent-tabs-mode nil)
+  (menu-bar-mode -1)
+  (tool-bar-mode -1)
+  (scroll-bar-mode -1)
   (setq-default tab-width nux/indent-width))
 
-;; TODO : font actually doesn't load when place below
-(use-package frame
-  :preface
-  (defun nux/fontsize-normal ()
-    (interactive)
-    (set-face-attribute 'default nil :height 140))
-  (defun nux/set-default-font ()
-    (interactive)
-    (when (member "Consolas" (font-family-list))
-      (set-face-attribute 'default nil :family "Consolas" :weight 'normal))
-    (nux/fontsize-normal))
-  (defalias 'nux/normal-fontsize #'nux/fontsize-normal)
-  (defalias 'nux/small-fontsize #'nux/fontsize-small)
-  :ensure nil
-  :config
-  (setq default-frame-alist
-        (append (list '(width  . 75) '(height . 35)
-                      '(internal-border-width . 2))))
-  (nux/set-default-font))
-
-;; GUI
-;; Remove unused features
-(menu-bar-mode -1)
-(tool-bar-mode -1)
-(scroll-bar-mode -1)
-(display-time-mode 1)
-
-;; Enable subwords for camel case
-(global-subword-mode 1)
-(global-hl-line-mode 0)
 
 ;; Dump custom-set-variables to a garbage file and don't load it
 (use-package cus-edit
@@ -106,23 +79,6 @@
  auto-save-default nil
  create-lockfiles nil)
 
-;; Graphicals tweaks
-;; Remove ugly startup screen
-(use-package "startup"
-  :ensure nil
-  :config (setq inhibit-startup-screen t))
-
-;; Load theme
-(use-package doom-themes
-  ;; :custom-face
-  ;; (ivy-current-match ((t (:inherit 'hl-line))))
-  :config
-  (load-theme 'doom-old-hope t))
-
-;; Fonts
-;; Courier is nice for text writin
-;; (set-face-attribute 'default nil :font "Consolas 14")
-
 ;; UTF-8 encoding
 (set-terminal-coding-system  'utf-8)
 (set-keyboard-coding-system  'utf-8)
@@ -132,7 +88,33 @@
 (prefer-coding-system        'utf-8)
 (set-input-method nil)
 
+;; GUI related
+;; Fonts
+;; Courier Prime, most compatible serif fonts tested. Nice for writing.
+;;(set-face-attribute 'default nil :font "Courier Prime 14")
+(set-face-attribute 'default nil :font "Cascadia Code Regular 14")
+
+;; Graphicals tweaks
+;; Remove ugly startup screen
+(use-package "startup"
+  :ensure nil
+  :config (setq inhibit-startup-screen t))
+
+;; Colorschemes
+
+;; Doom emacs bundle
+;; (use-package doom-themes
+;;   :config
+;;   (load-theme 'doom-acario-light t))
+
+(use-package flatui-theme
+  :config
+  (load-theme 'flatui t))
+
 ;; Editing
+;; Enable subwords for camel case
+(global-subword-mode 1)
+(global-hl-line-mode 0)
 (electric-pair-mode 1)
 
 (use-package highlight-symbol
@@ -144,6 +126,21 @@
   :hook (
          (text-mode . hes-mode)
          (prog-mode . hes-mode)))
+
+;; Expand region under the cursor semantically
+(use-package expand-region
+  :bind
+  ("M-z" . 'er/expand-region)
+  ("M-Z" . 'er/contract-region))
+
+;; Multiple Cusors
+;; Bind like VS Code
+(use-package multiple-cursors
+  :config
+  (setq mc/always-run-for-all 1)
+  :bind
+  (("M-S-<down>" . 'mc/mark-next-like-this)
+   ("M-S-<up>" . 'mc/mark-previous-like-this)))
 
 ;; Regular undo-redo
 (use-package undo-fu)
@@ -193,24 +190,9 @@
   (setq aw-scope 'frame) ;; was global
   (global-set-key (kbd "C-x o") 'ace-window))
 
-;; Expand region under the cursor semantically
-(use-package expand-region
-  :bind
-  ("M-z" . 'er/expand-region)
-  ("M-Z" . 'er/contract-region))
-
 ;; Delete trailing spaces
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 (setq require-final-newline t)
-
-;; Multiple Cusors
-;; Bind like VS Code
-(use-package multiple-cursors
-  :config
-  (setq mc/always-run-for-all 1)
-  :bind
-  (("M-S-<down>" . 'mc/mark-next-like-this)
-   ("M-S-<up>" . 'mc/mark-previous-like-this)))
 
 ;; Navigation
 ;; Avy -- jump to line or to char
@@ -218,13 +200,6 @@
   :bind
   ("M-s" . avy-goto-char-2)
   ("M-g" . avy-goto-line))
-
-;; Local buffer search, opens in a mini-buffer
-;; (use-package swiper
-;;   :after ivy
-;;   :config
-;;   (setq swiper-action-recenter t)
-;;   (setq swiper-goto-start-of-match t))
 
 (use-package swiper
   :config
@@ -263,7 +238,7 @@
    ("M-p" . counsel-git))
    )
 
-;; Company -- autocompletion backend
+;; Company: autocompletion backend
 (use-package company
   :hook
   (prog-mode . company-mode)
@@ -283,22 +258,52 @@
     (define-key company-active-map (kbd "C-n") #'company-select-next)
     (define-key company-active-map (kbd "C-p") #'company-select-previous)))
 
+(use-package prescient
+  :config
+  (setq prescient-filter-method '(literal regexp initialism fuzzy))
+  (prescient-persist-mode +1))
+
+;; (use-package ivy-prescient
+;;   :after (prescient ivy counsel)
+;;   :config
+;;   (setq ivy-prescient-sort-commands
+;;         '(:not swiper
+;;                counsel-grep
+;;                counsel-rg
+;;                counsel-projectile-rg
+;;                ivy-switch-buffer
+;;                counsel-switch-buffer))
+;;   (setq ivy-prescient-retain-classic-highlighting t)
+;;   (ivy-prescient-mode +1))
+
+(use-package company-prescient
+  :after (prescient company)
+  :config
+  (company-prescient-mode +1))
+
+;; Dired Enhancements. Allow tabbing to display sub-directories
+(use-package dired-subtree
+  :ensure t
+  :after dired
+  :config
+  (setq dired-subtree-use-backgrounds nil)
+  :bind (:map dired-mode-map ("<tab>" . dired-subtree-toggle)))
+
 ;; Which key
 ;; Display commands choice when hitting C-x / C-c etc.
  (use-package which-key
    :diminish which-key-mode
    :config
    (which-key-mode +1)
-   (setq which-key-idle-delay 0.4
-         which-key-idle-secondary-delay 0.4))
+   (setq which-key-idle-delay 0.2
+         which-key-idle-secondary-delay 0.2))
 
 ;; Snippets
 (use-package yasnippet
   :diminish yas-minor-mode
   :config (yas-global-mode 1))
-
-(use-package yasnippet-snippets)
-(use-package yasnippet-classic-snippets)
+;;(use-package yasnippet-snippets)
+;;(use-package yasnippet-classic-snippets)
 
 ;; More doc
 (use-package eldoc
@@ -318,36 +323,11 @@
 ;;   ;;(define-key projectile-mode-map (kbd "M-p") #'projectile-find-file)
 ;;   (define-key projectile-mode-map (kbd "M-p") #'projectile-ripgrep))
 
-;; Some functions
-;; Reload config
-(defun my/reload-config ()
-  (interactive)
-  (load-file "~/.emacs.d/init.el"))
-(global-set-key (kbd "C-c r") 'my/reload-config)
+;; Best git interface
+(use-package magit
+  :config
+  (global-set-key (kbd "C-x g") 'magit-status))
 
-;; Load config from anywhere
-(defun my/config ()
-  (interactive)
-  (find-file "~/.emacs.d/init.el"))
-(global-set-key (kbd "C-c i") 'my/config)
-
-;; Refresh packages
-(defun my/refresh ()
-  (interactive)
-  (package-refresh-contents))
-
-;; Split vertically and cursor follow new window
-(defun split-and-follow-vertically ()
-  (interactive)
-  (split-window-right)
-  (balance-windows)
-  (other-window 1))
-(global-set-key (kbd "C-x 3") 'split-and-follow-vertically)
-
-;; Kill buffer without warning
-(defun insta-kill-buffer ()
-  (interactive)
-  (kill-buffer))
 
 ;; Org mode
 ;; Set environment
@@ -357,12 +337,21 @@
    org-startup-indented t
    org-catch-invisible-edits t
    org-ellipsis " ... "
-   org-bullets-bullet-list '("#")
    org-directory "~/Dropbox/org"
    org-src-tab-acts-natively t
    org-src-preserve-indentation t
    org-src-fontify-natively t)
   )
+
+(org-babel-do-load-languages
+ 'org-babel-load-languages
+ '((python . t)
+   (emacs-lisp . t)
+   (shell . t)
+   (js . t)
+   (org . t)
+   (latex . t )
+       ))
 
 ;;Fancy headers
 (use-package org-bullets)
@@ -447,7 +436,7 @@
   :bind
   ("C-x C-b" . ibuffer))
 
-;; Code and language
+;; Language && Syntax
 ;; Template engine
 (use-package web-mode
   :mode (("\\.html?\\'" . web-mode)
@@ -491,6 +480,8 @@
               ("M-s-O" . 'markdown-export-html-to-clipboard-no-1st-line))
   :init (setq markdown-command '("pandoc" "--no-highlight")))
 
+;; Misc
+
 ;; RSS feed in Emacs
 (use-package elfeed
   :init
@@ -508,15 +499,18 @@
 ;; Colors highlighter
 (use-package rainbow-mode)
 
-;; Try packages without installing themes
+;; Try packages without hard install
 (use-package try)
 
-;; Diminish certains mode
+;; Diminish certain mode
 (use-package diminish)
 
 ;; Testing zone
+(use-package simple
+  :ensure nil
+  :config
+  (column-number-mode +1))
 ;;; Dired enhancements
-
 (use-package dired-single
   :preface
   (defun nux/dired-single-init ()
@@ -528,22 +522,10 @@
       (nux/dired-single-init)
     (add-hook 'dired-load-hook #'nux/dired-single-init)))
 
-(use-package dired-subtree
-  :ensure t
-  :after dired
-  :config
-  (setq dired-subtree-use-backgrounds nil)
-  :bind (:map dired-mode-map ("<tab>" . dired-subtree-toggle)))
+;; Pdf Enhancements
+(use-package pdf-tools)
 
-;; Pdf enhancements
-(use-package pdf-tools
-  :mode (("\\.pdf\\'" . pdf-view-mode))
-  :bind ((:map pdf-view-mode-map ("C--" . pdf-view-shrink))
-         (:map pdf-view-mode-map ("C-=" . pdf-view-enlarge))
-         (:map pdf-view-mode-map ("C-0" . pdf-view-scale-reset)))
-  :config
-  (pdf-loader-install))
-
+;; Mode-line enhancements
 (use-package smart-mode-line
   :config
   (setq sml/no-confirm-load-theme t)
@@ -556,36 +538,40 @@
   (setq minions-mode-line-delimiters '("" . ""))
   (minions-mode +1))
 
-;; SPELL CHECKING
-;; Spell checking requires an external command to be available. Install =aspell= on your Mac, then make it the default checker for Emacs' =ispell=. Note that personal dictionary is located at =~/.aspell.LANG.pws= by default.
-(setq ispell-program-name "aspell")
-
-;; Enable spellcheck on the fly for all text modes. This includes org, latex and LaTeX. Spellcheck current word.
-(add-hook 'text-mode-hook 'flyspell-mode)
-(global-set-key (kbd "s-\\") 'ispell-word)
-(global-set-key (kbd "C-s-\\") 'flyspell-auto-correct-word)
-
-(use-package powerthesaurus
-  :config
-  (global-set-key (kbd "C-c s-s") 'powerthesaurus-lookup-word-dwim)
-  )
-
-;; Alternative, local thesaurus
-;;(use-package synosaurus
-;;  :config
-;;  (global-set-key (kbd "C-c s s") 'synosaurus-choose-and-replace))
-
-;; Word definition search.
-(use-package define-word
-  :config
-  (global-set-key (kbd "C-c s-w") 'define-word-at-point))
-
-(use-package magit
-  :config
-  (global-set-key (kbd "C-x g") 'magit-status))
 ;; Testing zone ends here
 
-;; Custom kbd
+;; Custom functions
+;; Reload config
+(defun my/reload-config ()
+  (interactive)
+  (load-file "~/.emacs.d/init.el"))
+(global-set-key (kbd "C-c r") 'my/reload-config)
+
+;; Load config from anywhere
+(defun my/config ()
+  (interactive)
+  (find-file "~/.emacs.d/init.el"))
+(global-set-key (kbd "C-c i") 'my/config)
+
+;; Refresh packages
+(defun my/refresh ()
+  (interactive)
+  (package-refresh-contents))
+
+;; Split vertically and cursor follow new window
+(defun split-and-follow-vertically ()
+  (interactive)
+  (split-window-right)
+  (balance-windows)
+  (other-window 1))
+(global-set-key (kbd "C-x 3") 'split-and-follow-vertically)
+
+;; Kill buffer without warning
+(defun insta-kill-buffer ()
+  (interactive)
+  (kill-buffer))
+
+;; Custom Keybindings
 (define-key global-map (kbd "<f5>") 'org-sidebar-tree)
 (define-key global-map (kbd "C-c t") 'org-sidebar-tree)
 
@@ -606,3 +592,4 @@
 (load custom-file 'noerror)
 
 (provide 'init)
+;; EOF
