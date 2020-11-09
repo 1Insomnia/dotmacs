@@ -3,12 +3,15 @@
 ;; -*- lexical-binding: t -*-
 (defvar file-name-handler-alist-original file-name-handler-alist)
 
+
 (setq gc-cons-threshold most-positive-fixnum
       gc-cons-percentage 0.6
       file-name-handler-alist nil
       site-run-file nil)
 
+
 (defvar nux/gc-cons-threshold 100000000)
+
 
 (add-hook 'emacs-startup-hook ; hook run after loading init files
           #'(lambda ()
@@ -20,7 +23,10 @@
 (add-hook 'minibuffer-exit-hook #'(lambda ()
                                     (garbage-collect)
                                     (setq gc-cons-threshold nux/gc-cons-threshold)))
+
+
 (require 'package)
+
 
 ;; Sources
 ;;(add-to-list 'package-archives '("gnu" . "https://elpa.gnu.org/packages/"))
@@ -34,9 +40,11 @@
   (package-refresh-contents)
   (package-install 'use-package))
 
+
 ;; Always ensure installed
 (eval-and-compile
   (setq use-package-always-ensure t))
+
 
 ;; General settings
 (use-package emacs
@@ -49,19 +57,27 @@
   (setq ring-bell-function 'ignore)
   (setq default-directory "~/")
   (setq frame-resize-pixelwise t)
+  ;; Better scrolling
   (setq scroll-conservatively 101)
   (setq scroll-preserve-screen-position t)
   (setq auto-window-vscroll nil)
   (setq echo-keystrokes 0.02)
   (setq load-prefer-newer t)
+  ;; Should be default
   (fset 'yes-or-no-p 'y-or-n-p)
+  ;; Open browser stuff with firefox
   (setenv "BROWSER" "firefox" t)
   (add-to-list 'default-frame-alist '(ns-transparent-titlebar . t))
+  ;; Increase line spacing for better readability
   (setq-default line-spacing 3)
   (setq-default indent-tabs-mode nil)
+  ;; Disable useless gui stuff
   (menu-bar-mode -1)
   (tool-bar-mode -1)
   (scroll-bar-mode -1)
+  ;; Remove line between two fringes
+  (set-face-attribute 'vertical-border nil :foreground (face-attribute 'fringe :background))
+  (setq-default fill-column 79)
   (setq-default tab-width nux/indent-width))
 
 
@@ -71,13 +87,16 @@
   :config
   (setq custom-file "~/.emacs.d/to-be-dumped.el"))
 
+
 (setq auto-save-file-name-transforms '((".*" "~/.emacs.d/auto-save-list/" t)))
+
 
 ;; I don't care about auto save and backup files.
 (setq
  make-backup-files nil
  auto-save-default nil
  create-lockfiles nil)
+
 
 ;; UTF-8 encoding
 (set-terminal-coding-system  'utf-8)
@@ -88,50 +107,81 @@
 (prefer-coding-system        'utf-8)
 (set-input-method nil)
 
+
 ;; GUI related
 ;; Fonts
 ;; Courier Prime, most compatible serif fonts tested. Nice for writing.
 ;;(set-face-attribute 'default nil :font "Courier Prime 14")
 (set-face-attribute 'default nil :font "Cascadia Code Regular 14")
 
+
 ;; Graphicals tweaks
 ;; Remove ugly startup screen
-(use-package "startup"
-  :ensure nil
-  :config (setq inhibit-startup-screen t))
+;; (use-package "startup"
+;;   :ensure nil
+;;   :config (setq inhibit-startup-screen t))
 
-;; Colorschemes
 
-;; Doom emacs bundle
-;; (use-package doom-themes
+;; Welcome screen
+(setq inhibit-startup-message t)
+(setq inhibit-splash-screen t)
+(setq initial-scratch-message nil)
+(setq initial-buffer-choice "~/Dropbox/")
+
+;; Colorscheme madness
+;; (use-package flatui-theme
 ;;   :config
-;;   (load-theme 'doom-acario-light t))
+;;   (load-theme 'flatui t))
 
-(use-package flatui-theme
+
+(use-package vscode-dark-plus-theme
   :config
-  (load-theme 'flatui t))
+  (load-theme 'vscode-dark-plus t))
+
+
+;; Mode-line enhancements
+(use-package smart-mode-line
+  :config
+  (setq sml/no-confirm-load-theme t)
+  (setq sml/modified-char "*")
+  (sml/setup))
+
 
 ;; Editing
 ;; Enable subwords for camel case
 (global-subword-mode 1)
+;; Disable annoying highlight line
 (global-hl-line-mode 0)
+;; Autopair wrapper
 (electric-pair-mode 1)
+
+
+;; Actually doesn't use current theme background so it's ugly
+;; (use-package whitespace
+;;   :config
+;;   (global-whitespace-mode))
+(require 'whitespace)
+(setq-default show-trailing-whitespace t)
+
 
 (use-package highlight-symbol
   :hook (prog-mode . highlight-symbol-mode)
   :config
   (setq highlight-symbol-idle-delay 0.3))
 
+
 (use-package highlight-escape-sequences
   :hook (
          (text-mode . hes-mode)
          (prog-mode . hes-mode)))
+
 
 ;; Expand region under the cursor semantically
 (use-package expand-region
   :bind
   ("M-z" . 'er/expand-region)
   ("M-Z" . 'er/contract-region))
+
 
 ;; Multiple Cusors
 ;; Bind like VS Code
@@ -141,6 +191,7 @@
   :bind
   (("M-S-<down>" . 'mc/mark-next-like-this)
    ("M-S-<up>" . 'mc/mark-previous-like-this)))
+
 
 ;; Regular undo-redo
 (use-package undo-fu)
@@ -154,24 +205,33 @@
 (use-package crux
   :bind (("C-a" . crux-move-beginning-of-line)
          ("C-o" . crux-smart-open-line)
+         ("C-c d" . crux-duplicate-current-line-or-region)
+         ("C-x 4 t" . crux-transpose-windows)
          ("C-S-o" . crux-smart-open-line-above)
          ("C-k" . crux-smart-kill-line)
+         ("C-c k" . crux-kill-other-buffers)
+         ("M-o" . crux-other-window-or-switch-buffer)
+         ("C-c o". crux-open-with)
          ("s-R" . crux-rename-file-and-buffer)))
+
 
 ;; Move-text VS Code like
 (use-package move-text
   :config
   (move-text-default-bindings))
 
+
 ;; Actually pretty good
 (use-package hungry-delete
   :config
   (global-hungry-delete-mode))
 
+
 ;; Modern delete
 (use-package delsel
   :ensure nil
   :config (delete-selection-mode +1))
+
 
 ;; Matching parent
 (use-package paren
@@ -179,20 +239,25 @@
   :init (setq show-paren-delay 0)
   :config (show-paren-mode +1))
 
+
 ;; Windows
 (setq
  split-height-threshold 0
  split-width-threshold nil)
 
+
+;; Better window switching
 (use-package ace-window
   :ensure t
   :config
   (setq aw-scope 'frame) ;; was global
   (global-set-key (kbd "C-x o") 'ace-window))
 
+
 ;; Delete trailing spaces
 (add-hook 'before-save-hook 'delete-trailing-whitespace)
 (setq require-final-newline t)
+
 
 ;; Navigation
 ;; Avy -- jump to line or to char
@@ -201,13 +266,16 @@
   ("M-s" . avy-goto-char-2)
   ("M-g" . avy-goto-line))
 
+
 (use-package swiper
   :config
-  (global-set-key (kbd "C-s") 'swiper-isearch))
+  (global-set-key (kbd "C-s") 'swiper))
+
 
 ;; Line-oriented search tool
 ;; Recursively searchs your current directory
 (use-package ripgrep)
+
 
 ;; Completion framework
 ;;Ivy lightweight completion
@@ -220,10 +288,25 @@
     enable-recursive-minibuffers t
     ivy-initial-inputs-alist nil))
 
+
 (use-package ivy-rich
   :config
   (ivy-rich-mode 1)
   (setq ivy-rich-path-style 'abbrev))
+
+
+(use-package ivy-prescient
+  :after (prescient ivy counsel)
+  :config
+  (setq ivy-prescient-sort-commands
+        '(:not counsel-grep
+               counsel-rg
+               counsel-projectile-rg
+               ivy-switch-buffer
+               counsel-switch-buffer))
+  (setq ivy-prescient-retain-classic-highlighting t)
+  (ivy-prescient-mode +1))
+
 
 ;; Framework on top of ivy
 (use-package counsel
@@ -235,20 +318,13 @@
    (("M-x" . counsel-M-x)
    ("M-y" . counsel-yank-pop)
    ("C-x C-f" . counsel-find-file)
-   ("M-p" . counsel-git))
-   )
+   ("M-p" . counsel-git)))
 
-;; Company: autocompletion backend
+
 (use-package company
-  :hook
-  (prog-mode . company-mode)
-  ;;(text-mode . company-mode)
-  (org-mode . company-mode)
-  :bind
-  ("TAB" . company-complete)
+  :hook (prog-mode . company-mode)
   :config
   (setq company-minimum-prefix-length 1)
-  (setq company-idle-delay 0)
   (setq company-selection-wrap-around t)
   (setq company-tooltip-align-annotations t)
   (setq company-frontends '(company-pseudo-tooltip-frontend ; show tooltip even for single candidate
@@ -258,28 +334,21 @@
     (define-key company-active-map (kbd "C-n") #'company-select-next)
     (define-key company-active-map (kbd "C-p") #'company-select-previous)))
 
-(use-package prescient
-  :config
-  (setq prescient-filter-method '(literal regexp initialism fuzzy))
-  (prescient-persist-mode +1))
+;;(define-key company-active-map [tab] 'company-complete-common-or-cycle)
+;;(define-key company-active-map (kbd "TAB") 'company-complete-common-or-cycle)
 
-;; (use-package ivy-prescient
-;;   :after (prescient ivy counsel)
-;;   :config
-;;   (setq ivy-prescient-sort-commands
-;;         '(:not swiper
-;;                counsel-grep
-;;                counsel-rg
-;;                counsel-projectile-rg
-;;                ivy-switch-buffer
-;;                counsel-switch-buffer))
-;;   (setq ivy-prescient-retain-classic-highlighting t)
-;;   (ivy-prescient-mode +1))
 
 (use-package company-prescient
   :after (prescient company)
   :config
   (company-prescient-mode +1))
+
+
+(use-package prescient
+  :config
+  (setq prescient-filter-method '(literal regexp initialism fuzzy))
+  (prescient-persist-mode +1))
+
 
 ;; Dired Enhancements. Allow tabbing to display sub-directories
 (use-package dired-subtree
@@ -289,8 +358,21 @@
   (setq dired-subtree-use-backgrounds nil)
   :bind (:map dired-mode-map ("<tab>" . dired-subtree-toggle)))
 
+
+(use-package dired-single
+  :preface
+  (defun nux/dired-single-init ()
+    (define-key dired-mode-map [return] #'dired-single-buffer)
+    (define-key dired-mode-map [remap dired-mouse-find-file-other-window] #'dired-single-buffer-mouse)
+    (define-key dired-mode-map [remap dired-up-directory] #'dired-single-up-directory))
+  :config
+  (if (boundp 'dired-mode-map)
+      (nux/dired-single-init)
+    (add-hook 'dired-load-hook #'nux/dired-single-init)))
+
+
 ;; Which key
-;; Display commands choice when hitting C-x / C-c etc.
+;; Display commands choice when hitting C-x / C-c etc
  (use-package which-key
    :diminish which-key-mode
    :config
@@ -298,18 +380,24 @@
    (setq which-key-idle-delay 0.2
          which-key-idle-secondary-delay 0.2))
 
+
 ;; Snippets
 (use-package yasnippet
   :diminish yas-minor-mode
   :config (yas-global-mode 1))
-;;(use-package yasnippet-snippets)
-;;(use-package yasnippet-classic-snippets)
+(define-key yas-minor-mode-map (kbd "<tab>") nil)
+(define-key yas-minor-mode-map (kbd "TAB") nil)
+(define-key yas-minor-mode-map (kbd "<backtab>") 'yas-expand)
+(use-package yasnippet-snippets)
+(use-package yasnippet-classic-snippets)
+
 
 ;; More doc
 (use-package eldoc
   :ensure nil
   :config
   (setq eldoc-idle-delay 0.4))
+
 
 ;; Projectile quick file jump in your dir project
 ;; TODO : needs to read doc fore better integration with win10
@@ -329,6 +417,16 @@
   (global-set-key (kbd "C-x g") 'magit-status))
 
 
+(use-package diff-hl
+  :hook ((prog-mode . diff-hl-mode)
+         (diff-hl-mode . diff-hl-flydiff-mode))
+  :config
+  (setq diff-hl-flydiff-delay 0.05))
+
+
+(fringe-mode '(4 . 4))
+
+
 ;; Org mode
 ;; Set environment
 (use-package org
@@ -340,9 +438,10 @@
    org-directory "~/Dropbox/org"
    org-src-tab-acts-natively t
    org-src-preserve-indentation t
-   org-src-fontify-natively t)
-  )
+   org-src-fontify-natively t))
 
+
+;; Import languages
 (org-babel-do-load-languages
  'org-babel-load-languages
  '((python . t)
@@ -350,13 +449,15 @@
    (shell . t)
    (js . t)
    (org . t)
-   (latex . t )
-       ))
+   (latex . t )))
+
 
 ;;Fancy headers
 (use-package org-bullets)
 (add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
 
+
+;; Display tree view in left pane
 (use-package org-sidebar)
 
 ;; Org agenda
@@ -373,7 +474,9 @@
         (800 1200 1600 2000)
         "......" "----------------")))
 
+
 (global-set-key (kbd "C-c a") 'org-agenda)
+
 
 ;; Org agenda enhancements
 (use-package org-super-agenda
@@ -392,6 +495,7 @@
                            (:name "Big Outcomes"
                                   :tag "bo"))))
 
+
 ;; Add more states to todos
 (setq org-todo-keyword-faces
       '(("TODO" . (:foreground "green" :weight bold))
@@ -399,6 +503,7 @@
         ("WAITING" . (:foreground "green" :weight bold))
         ("URGENT" . (:foreground "red" :weight bold))
         ("SOMEDAY" . (:foreground "gray" :weight bold))))
+
 
 ;; Todos states
 (setq org-todo-keywords
@@ -408,6 +513,7 @@
     "WAITING(w@/!)"
     "SOMEDAY(.)" "|" "DONE(x!)" "CANCELLED(c)")
    (sequence "URGENT(!)" "HIGH(h)" "|" "MEDIUM(m)" "Low(l)")))
+
 
 ;; Org capture
 ;; Some tweaks to make here
@@ -423,18 +529,38 @@
         ("n" "Note" entry (file+olp "~/Dropbox/org/notes.org" "Notes")
           "* %u %? " :prepend t)
         ("r" "RSS" entry (file+headline "~/Dropbox/elfeed.org" "Feeds")
-           "** %^g\n" :prepend t)))
+         "** %^g\n" :prepend t)))
+
+
 (global-set-key (kbd "C-c c") 'org-capture)
 
+
 ;;Register more exports
+(use-package ox
+  :ensure nil
+  :config
+  (setq org-export-with-smart-quotes t))
+
+
 (require 'ox-md)
 
+;; Pdf Enhancements
+(use-package pdf-tools)
+
+
+;; Buffers
 ;; Ibuffer
 (use-package ibuffer
   :config
   (setq ibuffer-expert t)
   :bind
   ("C-x C-b" . ibuffer))
+
+
+;; Autorevert buffers and dired
+(global-auto-revert-mode 1)
+(setq global-auto-revert-non-file-buffers t)
+(setq auto-revert-verbose nil)
 
 ;; Language && Syntax
 ;; Template engine
@@ -451,6 +577,7 @@
   :hook
   (web-mode . rainbow-mode))
 
+
 ;; Fast code with Emmet
 (use-package emmet-mode
   :hook ((html-mode   . emmet-mode)
@@ -465,8 +592,8 @@
   (add-hook 'web-mode-hook #'(lambda ()
                                (setq-local emmet-expand-jsx-className? t))))
 
-;; Markdown
 
+;; Markdown
 (use-package markdown-mode
   :defer t
   :mode (("README\\.md\\'" . gfm-mode)
@@ -480,8 +607,8 @@
               ("M-s-O" . 'markdown-export-html-to-clipboard-no-1st-line))
   :init (setq markdown-command '("pandoc" "--no-highlight")))
 
-;; Misc
 
+;; Misc
 ;; RSS feed in Emacs
 (use-package elfeed
   :init
@@ -490,53 +617,40 @@
   ("C-c u" . elfeed-update)
   ("C-c e" . elfeed))
 
+
 ;; Store links in an org file
 (use-package elfeed-org
   :config
   (setq rmh-elfeed-org-files (list "~/Dropbox/elfeed.org"))
   (elfeed-org))
 
+
 ;; Colors highlighter
 (use-package rainbow-mode)
+
 
 ;; Try packages without hard install
 (use-package try)
 
+
 ;; Diminish certain mode
 (use-package diminish)
+
+
+;; Menu for the mode line
+(use-package minions
+  :config
+  (setq minions-mode-line-lighter "")
+  (setq minions-mode-line-delimiters '("" . ""))
+  (minions-mode +1))
+
 
 ;; Testing zone
 (use-package simple
   :ensure nil
   :config
   (column-number-mode +1))
-;;; Dired enhancements
-(use-package dired-single
-  :preface
-  (defun nux/dired-single-init ()
-    (define-key dired-mode-map [return] #'dired-single-buffer)
-    (define-key dired-mode-map [remap dired-mouse-find-file-other-window] #'dired-single-buffer-mouse)
-    (define-key dired-mode-map [remap dired-up-directory] #'dired-single-up-directory))
-  :config
-  (if (boundp 'dired-mode-map)
-      (nux/dired-single-init)
-    (add-hook 'dired-load-hook #'nux/dired-single-init)))
 
-;; Pdf Enhancements
-(use-package pdf-tools)
-
-;; Mode-line enhancements
-(use-package smart-mode-line
-  :config
-  (setq sml/no-confirm-load-theme t)
-  (setq sml/modified-char "*")
-  (sml/setup))
-
-(use-package minions
-  :config
-  (setq minions-mode-line-lighter "")
-  (setq minions-mode-line-delimiters '("" . ""))
-  (minions-mode +1))
 
 ;; Testing zone ends here
 
@@ -547,16 +661,19 @@
   (load-file "~/.emacs.d/init.el"))
 (global-set-key (kbd "C-c r") 'my/reload-config)
 
+
 ;; Load config from anywhere
 (defun my/config ()
   (interactive)
   (find-file "~/.emacs.d/init.el"))
 (global-set-key (kbd "C-c i") 'my/config)
 
+
 ;; Refresh packages
 (defun my/refresh ()
   (interactive)
   (package-refresh-contents))
+
 
 ;; Split vertically and cursor follow new window
 (defun split-and-follow-vertically ()
@@ -566,21 +683,26 @@
   (other-window 1))
 (global-set-key (kbd "C-x 3") 'split-and-follow-vertically)
 
+
 ;; Kill buffer without warning
 (defun insta-kill-buffer ()
   (interactive)
   (kill-buffer))
 
+
 ;; Custom Keybindings
 (define-key global-map (kbd "<f5>") 'org-sidebar-tree)
 (define-key global-map (kbd "C-c t") 'org-sidebar-tree)
 
+
 (define-key global-map (kbd "C-c x") 'eval-buffer)
 (define-key global-map (kbd "C-c f") 'eval-region)
+
 
 ;; Previous/Next buffer
 (global-set-key (kbd "C->") 'next-buffer)
 (global-set-key (kbd "C-<") 'previous-buffer)
+
 
 ;; ;; Tree bindings from C-z
 ;; (define-prefix-command 'z-map)
@@ -588,6 +710,7 @@
 ;; (define-key z-map (kbd "e") 'elfeed)
 ;; (define-key z-map (kbd "v") 'split-and-follow-vertically)
 ;; (define-key z-map (kbd "h") 'split-and-follow-horizontally)
+
 
 (load custom-file 'noerror)
 

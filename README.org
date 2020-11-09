@@ -16,3 +16,4 @@ New config targetted for writing notes, papers and a bit for web editing.
 - [X] : same for magit.
 - [ ] : needs pandoc conversion for markdown.
 - [ ] : needs to fix org-babel for js. Throwing a bunch of errors for the moment.
+- [X] : pdf tools magically works now.
