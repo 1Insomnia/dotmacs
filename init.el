@@ -25,6 +25,16 @@
                                     (setq gc-cons-threshold nux/gc-cons-threshold)))
 
 
+;; Metrics
+(add-hook 'emacs-startup-hook
+          (lambda ()
+            (message "Emacs ready in %s with %d garbage collections."
+                     (format "%.2f seconds"
+                             (float-time
+                              (time-subtract after-init-time before-init-time)))
+                     gcs-done)))
+
+
 (require 'package)
 
 
@@ -78,6 +88,7 @@
   ;; Remove line between two fringes
   (set-face-attribute 'vertical-border nil :foreground (face-attribute 'fringe :background))
   (setq-default fill-column 79)
+  (setq confirm-kill-emacs 'y-or-n-p)
   (setq-default tab-width nux/indent-width))
 
 
@@ -112,20 +123,19 @@
 ;; Fonts
 ;; Courier Prime, most compatible serif fonts tested. Nice for writing.
 ;;(set-face-attribute 'default nil :font "Courier Prime 14")
-(set-face-attribute 'default nil :font "Cascadia Code Regular 14")
-
-
-;; Graphicals tweaks
-;; Remove ugly startup screen
-;; (use-package "startup"
-;;   :ensure nil
-;;   :config (setq inhibit-startup-screen t))
-
+;;(set-face-attribute 'default nil :font "Cascadia Code Regular 14")
+(if (condition-case nil
+        (x-list-fonts "Hack")
+      (error nil))
+    (progn
+      (add-to-list 'default-frame-alist '(font . "Hack"))
+      (set-face-attribute 'default nil :font "Hack")))
 
 ;; Welcome screen
 (setq inhibit-startup-message t)
 (setq inhibit-splash-screen t)
 (setq initial-scratch-message nil)
+;; Open buffer in dired ~/Dropbox/
 (setq initial-buffer-choice "~/Dropbox/")
 
 ;; Colorscheme madness
@@ -134,18 +144,62 @@
 ;;   (load-theme 'flatui t))
 
 
-(use-package vscode-dark-plus-theme
-  :config
-  (load-theme 'vscode-dark-plus t))
+;; (use-package vscode-dark-plus-theme
+;;   :config
+;;   (load-theme 'vscode-dark-plus t))
+
+
+(use-package dracula-theme
+  :config (load-theme 'dracula t)
+  (set-face-background 'mode-line "#510370")
+  (set-face-background 'mode-line-inactive "#212020"))
+
+(custom-set-faces
+ '(mode-line ((t (:background "#510370" :foreground "white")))))
 
 
 ;; Mode-line enhancements
-(use-package smart-mode-line
-  :config
-  (setq sml/no-confirm-load-theme t)
-  (setq sml/modified-char "*")
-  (sml/setup))
+;; (use-package smart-mode-line
+;;   :config
+;;   (setq sml/no-confirm-load-theme t)
+;;   (setq sml/modified-char "*")
+;;   (sml/setup))
 
+
+(setq-default mode-line-format '("%e"
+                                 mode-line-front-space
+                                 " "
+                                 mode-line-modified
+                                 " "
+                                 "%[" mode-line-buffer-identification "%]"
+                                 "   "
+                                 "L%l"
+                                 "  "
+                                 mode-line-modes
+                                 mode-line-misc-info
+                                 projectile-mode-line
+                                 " "
+                                 (:propertize " " display ((space :align-to (- right 14)))) ;; push to the right side
+                                 (vc-mode vc-mode)
+                                 mode-line-end-spaces))
+
+;; All the icons pack
+(use-package all-the-icons
+  :defer 0.5)
+
+;; All the icons ivy
+(use-package all-the-icons-ivy
+  :after (all-the-icons ivy)
+  :custom (all-the-icons-ivy-buffer-commands '(ivy-switch-buffer-other-window ivy-switch-buffer))
+  :config
+    (add-to-list 'all-the-icons-ivy-file-commands 'counsel-dired-jump)
+    (add-to-list 'all-the-icons-ivy-file-commands 'counsel-find-library)
+    (all-the-icons-ivy-setup))
+
+;; All the icons dired
+(use-package all-the-icons-dired
+  :hook
+  (dired-mode-hook . all-the-icons-dired-mode))
 
 ;; Editing
 ;; Enable subwords for camel case
@@ -334,6 +388,7 @@
     (define-key company-active-map (kbd "C-n") #'company-select-next)
     (define-key company-active-map (kbd "C-p") #'company-select-previous)))
 
+
 ;;(define-key company-active-map [tab] 'company-complete-common-or-cycle)
 ;;(define-key company-active-map (kbd "TAB") 'company-complete-common-or-cycle)
 
@@ -377,8 +432,8 @@
    :diminish which-key-mode
    :config
    (which-key-mode +1)
-   (setq which-key-idle-delay 0.2
-         which-key-idle-secondary-delay 0.2))
+   (setq which-key-idle-delay 0.5
+         which-key-idle-secondary-delay 0.5))
 
 
 ;; Snippets
@@ -624,6 +679,12 @@
   (setq rmh-elfeed-org-files (list "~/Dropbox/elfeed.org"))
   (elfeed-org))
 
+;; Package management
+(use-package paradox
+  :custom
+  (paradox-execute-asynchronously t)
+  :config
+  (paradox-enable))
 
 ;; Colors highlighter
 (use-package rainbow-mode)
@@ -650,6 +711,11 @@
   :ensure nil
   :config
   (column-number-mode +1))
+
+
+(use-package dabbrev
+  :diminish abbrev-mode)
+(global-set-key (kbd "M-/") 'hippie-expand)
 
 
 ;; Testing zone ends here
@@ -702,6 +768,21 @@
 ;; Previous/Next buffer
 (global-set-key (kbd "C->") 'next-buffer)
 (global-set-key (kbd "C-<") 'previous-buffer)
+
+
+;; Better than the terrible default
+(global-set-key (kbd "<home>") 'beginning-of-buffer)
+(global-set-key (kbd "<end>") 'end-of-buffer)
+
+
+;; Quick buffer switching ma dude!
+(global-set-key [mouse-4] 'switch-to-prev-buffer)
+(global-set-key [mouse-5] 'switch-to-next-buffer)
+
+
+;; Aliases
+(defalias 'ff 'find-file)
+(defalias 'd 'dired)
 
 
 ;; ;; Tree bindings from C-z
